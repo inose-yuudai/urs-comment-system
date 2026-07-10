@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>debug receiver</title>
+    <style>
+      body { font-family: monospace; background: #111; color: #eee; padding: 16px; }
+      #log div { padding: 2px 0; border-bottom: 1px solid #333; }
+      .ok { color: #3fb950; }
+      .ng { color: #f85149; }
+    </style>
+  </head>
+  <body>
+    <h3>debug receiver — room:default</h3>
+    <div id="state">connecting…</div>
+    <div id="log"></div>
+    <script type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+      const SUPABASE_URL = "https://yuhztxmuqqlefdeptecd.supabase.co";
+      const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_QpYyfaifwzb8dH1RfcqfzQ_7iHZS-Jn";
+      const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+      const stateEl = document.getElementById("state");
+      const logEl = document.getElementById("log");
+      const log = (msg, cls = "") => {
+        const d = document.createElement("div");
+        if (cls) d.className = cls;
+        d.textContent = `[${new Date().toISOString()}] ${msg}`;
+        logEl.prepend(d);
+        console.log("[debug-receiver]", msg);
+      };
+      supabase
+        .channel("room:default")
+        .on("broadcast", { event: "new_comment" }, (payload) => {
+          log("RECEIVED: " + JSON.stringify(payload.payload), "ok");
+        })
+        .on("broadcast", { event: "new_stamp" }, (payload) => {
+          log("RECEIVED stamp: " + JSON.stringify(payload.payload), "ok");
+        })
+        .subscribe((status, err) => {
+          stateEl.textContent = "status: " + status + (err ? " err=" + err : "");
+          log("subscribe status: " + status + (err ? " err=" + err : ""), status === "SUBSCRIBED" ? "ok" : "ng");
+        });
+    </script>
+  </body>
+</html>

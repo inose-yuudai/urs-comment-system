@@ -1,0 +1,52 @@
+{
+  "name": "yours-comment-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && esbuild src/renderer.ts --bundle --format=esm --outfile=dist/renderer.js && cp src/index.html src/style.css src/preload.cjs dist/ && cp -R src/stamps dist/",
+    "dev": "npm run build && electron .",
+    "web": "serve web -l 5173",
+    "dist": "npm run build && electron-builder --mac"
+  },
+  "keywords": [],
+  "author": "tcu-ogura-group",
+  "license": "ISC",
+  "type": "module",
+  "build": {
+    "appId": "com.urassh.yours",
+    "productName": "yours",
+    "files": [
+      "dist/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "extraResources": [
+      {
+        "from": ".env",
+        "to": ".env"
+      }
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "identity": null,
+      "category": "public.app-category.entertainment"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.1",
+    "serve": "^14.2.6",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2"
+  }
+}

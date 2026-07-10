@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>yours コメント送信</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f1115;
+        --panel: #1a1d24;
+        --border: #2a2e38;
+        --text: #e6e8ec;
+        --muted: #8b909a;
+        --accent: #ff5c8a;
+        --ok: #3fb950;
+        --ng: #f85149;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .card {
+        width: min(440px, 92vw);
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 24px;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 18px;
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 18px;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--muted);
+        transition: background 0.2s;
+      }
+      .dot.ok {
+        background: var(--ok);
+      }
+      .dot.ng {
+        background: var(--ng);
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 12px 0 6px;
+      }
+      input,
+      textarea {
+        width: 100%;
+        background: #11141a;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--text);
+        font: inherit;
+        padding: 10px 12px;
+        resize: none;
+      }
+      input:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      button {
+        width: 100%;
+        margin-top: 16px;
+        padding: 12px;
+        border: none;
+        border-radius: 9px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .hint {
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--muted);
+        text-align: center;
+        min-height: 1em;
+      }
+      .presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 6px;
+      }
+      .presets button {
+        width: auto;
+        margin: 0;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        background: #11141a;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        transition: border-color 0.15s, opacity 0.15s;
+      }
+      .presets button:hover:not(:disabled) {
+        border-color: var(--accent);
+      }
+      .stamps {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 6px;
+      }
+      .stamps button {
+        width: 64px;
+        height: 64px;
+        margin: 0;
+        padding: 4px;
+        background: #11141a;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        transition: border-color 0.15s, opacity 0.15s;
+      }
+      .stamps button:hover:not(:disabled) {
+        border-color: var(--accent);
+      }
+      .stamps button img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>🎤 yours コメント送信</h1>
+      <span class="status">
+        <span class="dot" id="dot"></span>
+        <span id="status">接続中…</span>
+      </span>
+
+      <label for="text">コメント</label>
+      <textarea id="text" rows="2" placeholder="コメントを入力" autocomplete="off"></textarea>
+
+      <button id="send" disabled>送信</button>
+
+      <label>迷ったらこれ</label>
+      <div class="presets" id="presets"></div>
+
+      <label>スタンプ</label>
+      <div class="stamps" id="stamps"></div>
+
+      <p class="hint" id="hint"></p>
+    </div>
+
+    <script type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+      // 公開鍵はクライアント公開用なので埋め込んで問題ない
+      const SUPABASE_URL = "https://yuhztxmuqqlefdeptecd.supabase.co";
+      const SUPABASE_PUBLISHABLE_KEY =
+        "sb_publishable_QpYyfaifwzb8dH1RfcqfzQ_7iHZS-Jn";
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+      // ルームIDは固定（受信側 renderer.ts と合わせる）
+      const ROOM_ID = "default";
+
+      // スタンプ登録表: 通信ではコードだけを送り、画像はお互いローカルに持つ
+      // （受信側 src/stamps.ts と同じコードを登録すること）
+      const STAMPS = {
+        keke: "stamps/keke.png",
+      };
+
+      // 定型文: 通常のテキストコメントとして送信される
+      const PRESETS = [
+        "いいね！！",
+        "それ天才✨",
+        "おはちゃみこ☀️",
+        "ごめんなちゃみこ",
+        "さすが...!!",
+        "ナイス〜!!",
+        "もうそれはプロだ...",
+        "どきどき...!!",
+        "さすらっしゅ",
+      ];
+
+      const $ = (id) => document.getElementById(id);
+      const dot = $("dot");
+      const statusEl = $("status");
+      const textEl = $("text");
+      const sendBtn = $("send");
+      const presetsEl = $("presets");
+      const stampsEl = $("stamps");
+      const hint = $("hint");
+
+      let channel = null;
+      let ready = false;
+      let stampCooldown = false;
+      let presetCooldown = false;
+      const STAMP_COOLDOWN_MS = 3000;
+      const PRESET_COOLDOWN_MS = 2000;
+
+      function updateStampButtons() {
+        for (const btn of stampsEl.querySelectorAll("button")) {
+          btn.disabled = !ready || stampCooldown;
+        }
+      }
+
+      function updatePresetButtons() {
+        for (const btn of presetsEl.querySelectorAll("button")) {
+          btn.disabled = !ready || presetCooldown;
+        }
+      }
+
+      function setStatus(label, state) {
+        statusEl.textContent = label;
+        dot.className = "dot" + (state ? " " + state : "");
+        ready = state === "ok";
+        sendBtn.disabled = !ready;
+        updateStampButtons();
+        updatePresetButtons();
+      }
+
+      // ルームに接続（受信側 supabase-comment-source.ts と同じチャンネル名）
+      function connect(roomId) {
+        if (channel) supabase.removeChannel(channel);
+        ready = false;
+        sendBtn.disabled = true;
+        setStatus(`接続中… (room:${roomId})`, "");
+
+        channel = supabase
+          .channel(`room:${roomId}`)
+          .subscribe((status) => {
+            if (status === "SUBSCRIBED") {
+              setStatus(`接続済み (room:${roomId})`, "ok");
+            } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              setStatus("接続エラー", "ng");
+            } else if (status === "CLOSED") {
+              setStatus("切断", "ng");
+            }
+          });
+      }
+
+      async function send() {
+        const text = textEl.value.trim();
+        if (!ready || !text) return;
+
+        sendBtn.disabled = true;
+        // 受信側の契約: event "new_comment" / payload { text }
+        const res = await channel.send({
+          type: "broadcast",
+          event: "new_comment",
+          payload: { text },
+        });
+
+        if (res === "ok") {
+          textEl.value = "";
+          hint.textContent = "送信しました ✓";
+        } else {
+          hint.textContent = "送信に失敗しました: " + res;
+        }
+        sendBtn.disabled = !ready;
+        textEl.focus();
+      }
+
+      async function sendPreset(text) {
+        if (!ready || presetCooldown) return;
+
+        // 連打防止: 2秒のクールダウン
+        presetCooldown = true;
+        updatePresetButtons();
+        setTimeout(() => {
+          presetCooldown = false;
+          updatePresetButtons();
+        }, PRESET_COOLDOWN_MS);
+
+        // 定型文は通常のテキストコメントとして送信する
+        const res = await channel.send({
+          type: "broadcast",
+          event: "new_comment",
+          payload: { text },
+        });
+
+        hint.textContent =
+          res === "ok" ? "送信しました ✓" : "送信に失敗しました: " + res;
+      }
+
+      async function sendStamp(code) {
+        if (!ready || stampCooldown) return;
+
+        // 連打防止: 1秒のクールダウン
+        stampCooldown = true;
+        updateStampButtons();
+        setTimeout(() => {
+          stampCooldown = false;
+          updateStampButtons();
+        }, STAMP_COOLDOWN_MS);
+
+        // 画像そのものは送らず、コードだけを送る
+        // 受信側の契約: event "new_stamp" / payload { code }
+        const res = await channel.send({
+          type: "broadcast",
+          event: "new_stamp",
+          payload: { code },
+        });
+
+        hint.textContent =
+          res === "ok" ? "スタンプを送信しました ✓" : "送信に失敗しました: " + res;
+      }
+
+      // 定型文ボタンを生成
+      for (const text of PRESETS) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.disabled = true;
+        btn.textContent = text;
+        btn.addEventListener("click", () => sendPreset(text));
+        presetsEl.appendChild(btn);
+      }
+
+      // スタンプボタンを登録表から生成
+      for (const [code, src] of Object.entries(STAMPS)) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.disabled = true;
+        btn.title = code;
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = code;
+        btn.appendChild(img);
+        btn.addEventListener("click", () => sendStamp(code));
+        stampsEl.appendChild(btn);
+      }
+
+      // 送信は「送信」ボタン押下時のみ
+      sendBtn.addEventListener("click", send);
+
+      connect(ROOM_ID);
+    </script>
+  </body>
+</html>
