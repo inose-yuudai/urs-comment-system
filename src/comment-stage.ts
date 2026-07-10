@@ -1,20 +1,9 @@
 import type { Comment, Stamp } from "./comment.js";
 import { STAMPS } from "./stamps.js";
+import { COMMENT_CONFIG as CFG } from "./comment-config.js";
 import { pick, randInt } from "./random.js";
 
 export class CommentStage {
-  private static readonly COLORS: readonly string[] = [
-    "#ffffff",
-    "#ffeb3b",
-    "#ff5252",
-    "#69f0ae",
-    "#40c4ff",
-    "#ff80ab",
-    "#b388ff",
-  ];
-  private static readonly FONT_SIZES: readonly number[] = [24, 32, 40, 56];
-  private static readonly STAMP_SIZE = 96;
-
   constructor(private readonly root: HTMLElement) {}
 
   spawn(comment: Comment): void {
@@ -22,14 +11,22 @@ export class CommentStage {
     el.className = "comment";
     el.textContent = comment.text;
 
-    const fontSize = pick(CommentStage.FONT_SIZES);
+    const fontSize = pick(CFG.fontSizes);
     el.style.fontSize = `${fontSize}px`;
-    el.style.color = pick(CommentStage.COLORS);
+    el.style.color = pick(CFG.colors);
+    el.style.fontWeight = `${CFG.fontWeight}`;
+    if (CFG.outlineWidth > 0) {
+      const w = CFG.outlineWidth;
+      const c = CFG.outlineColor;
+      el.style.textShadow = `${w}px ${w}px 0 ${c}, -${w}px ${w}px 0 ${c}, ${w}px -${w}px 0 ${c}, -${w}px -${w}px 0 ${c}`;
+    } else {
+      el.style.textShadow = "none";
+    }
 
     const top = randInt(0, Math.max(0, this.root.clientHeight - fontSize - 8));
     el.style.top = `${top}px`;
 
-    el.style.animationDuration = `${randInt(5, 10)}s`;
+    el.style.animationDuration = `${randInt(CFG.flowSeconds.min, CFG.flowSeconds.max)}s`;
     el.addEventListener("animationend", () => el.remove());
     this.root.appendChild(el);
   }
@@ -39,9 +36,11 @@ export class CommentStage {
     if (!src) return; // 未知のコードは無視
 
     // 画面のランダムな位置にポンと現れて消える
-    const size = CommentStage.STAMP_SIZE;
+    const size = CFG.stampSize;
     const wrap = document.createElement("div");
     wrap.className = "stamp-burst";
+    wrap.style.width = `${size}px`;
+    wrap.style.height = `${size}px`;
     const top = randInt(0, Math.max(0, this.root.clientHeight - size - 8));
     const left = randInt(0, Math.max(0, this.root.clientWidth - size - 8));
     wrap.style.top = `${top}px`;
@@ -51,7 +50,7 @@ export class CommentStage {
     el.className = "stamp";
     el.src = src;
     el.alt = stamp.code;
-    el.style.animationDuration = `${randInt(1800, 2600)}ms`;
+    el.style.animationDuration = `${randInt(CFG.stampMs.min, CFG.stampMs.max)}ms`;
     // 本体のアニメーションが一番長いので、終わったら火花ごと片付ける
     el.addEventListener("animationend", () => wrap.remove());
     wrap.appendChild(el);
@@ -76,7 +75,7 @@ export class CommentStage {
       const dot = randInt(6, 12);
       p.style.width = `${dot}px`;
       p.style.height = `${dot}px`;
-      p.style.background = pick(CommentStage.COLORS);
+      p.style.background = pick(CFG.colors);
       p.style.animationDuration = `${randInt(500, 900)}ms`;
       p.style.animationDelay = `${randInt(0, 120)}ms`;
 
