@@ -4,6 +4,7 @@
 // 値を "emoji:🎉" のようにすると、画像ファイルなしで絵文字がそのままスタンプになる。
 export const STAMPS: Readonly<Record<string, string>> = {
   logo: "stamps/logo.png",
+  logo18: "stamps/logo18.png",
   uno: "stamps/uno.png",
   urs: "stamps/urs.png",
   tada: "emoji:🎉",
