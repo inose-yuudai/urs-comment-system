@@ -97,14 +97,6 @@ function updateMenus(): void {
     );
   }
 
-  // Dock アイコン右クリックからも切り替えられるようにする
-  // （ウィンドウがフォーカス不可のためアプリメニューが出せない環境向けの確実な入口）
-  app.dock?.setMenu(
-    Menu.buildFromTemplate([
-      { label: "表示先ディスプレイ", enabled: false },
-      ...displayMenuItems(),
-    ]),
-  );
 }
 
 // Ctrl+Cmd+Y で次のディスプレイへ順繰りに移動する
@@ -126,8 +118,9 @@ function createTray(): void {
 }
 
 app.whenReady().then(() => {
-  // フォーカス不可ウィンドウしか持たないため、Dock アイコンを明示的に出しておく
-  app.dock?.show();
+  // 他アプリの全画面（フルスクリーンSpace）の上に重ねるには
+  // Dock アイコンを隠したエージェントアプリである必要がある
+  app.dock?.hide();
 
   createWindow(screen.getPrimaryDisplay());
   createTray();
