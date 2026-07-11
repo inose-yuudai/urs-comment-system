@@ -64,6 +64,13 @@ export class CommentStage {
     const src = STAMPS[stamp.code];
     if (!src) return; // 未知のコードは無視
 
+    // 拍手は通常のバーストではなく、画面下から大量に湧き上がる専用演出
+    if ((CFG.clapCodes as readonly string[]).includes(stamp.code)) {
+      const emoji = src.startsWith("emoji:") ? src.slice("emoji:".length) : "👏";
+      this.spawnClapWave(emoji);
+      return;
+    }
+
     // 画面のランダムな位置にポンと現れて消える
     const size = CFG.stampSize;
     const wrap = document.createElement("div");
@@ -96,6 +103,25 @@ export class CommentStage {
 
     this.spawnParticles(wrap);
     this.root.appendChild(wrap);
+  }
+
+  // 画面下のあちこちから拍手がポコポコ湧き上がって消える
+  private spawnClapWave(emoji: string): void {
+    for (let i = 0; i < CFG.clapBurstCount; i++) {
+      const el = document.createElement("span");
+      el.className = "clap";
+      el.textContent = emoji;
+      el.style.left = `${Math.random() * 96}%`;
+      el.style.bottom = `${randInt(0, 10)}%`;
+      el.style.fontSize = `${randInt(28, 72)}px`;
+      el.style.setProperty("--rise", `${randInt(90, 240)}px`);
+      el.style.setProperty("--sway", `${randInt(-70, 70)}px`);
+      el.style.setProperty("--tilt", `${randInt(-24, 24)}deg`);
+      el.style.animationDuration = `${randInt(1200, 2200)}ms`;
+      el.style.animationDelay = `${randInt(0, 600)}ms`;
+      el.addEventListener("animationend", () => el.remove());
+      this.root.appendChild(el);
+    }
   }
 
   private spawnParticles(wrap: HTMLElement): void {

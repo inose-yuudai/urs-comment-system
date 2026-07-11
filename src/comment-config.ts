@@ -40,4 +40,10 @@ export const COMMENT_CONFIG = {
 
   // 紙吹雪の枚数
   confettiCount: 90,
+
+  // 拍手演出: このコードのスタンプが来たら画面下から拍手が大量に湧き上がる
+  clapCodes: ["clap"],
+
+  // 一度に湧き上がる拍手の数
+  clapBurstCount: 30,
 } as const;
