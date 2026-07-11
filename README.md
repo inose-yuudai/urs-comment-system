@@ -11,8 +11,7 @@
 
 > **https://urs-flame.vercel.app/**
 >
-> ※ Vercel のダッシュボードに表示される本番 URL に差し替えてください。
-> ルームを分けたいときは `?room=好きな名前` を付けます(例: `https://urs-xxxx.vercel.app/?room=event2`)。
+> ルームを分けたいときは `?room=好きな名前` を付けます(例: `https://urs-flame.vercel.app/?room=event2`)。
 
 ---
 
