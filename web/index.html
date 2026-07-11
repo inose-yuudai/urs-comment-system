@@ -198,6 +198,7 @@
       <span class="status">
         <span class="dot" id="dot"></span>
         <span id="status">接続中…</span>
+        <span id="count"></span>
       </span>
 
       <label for="text">コメント</label>
@@ -268,6 +269,7 @@
       const presetsEl = $("presets");
       const stampsEl = $("stamps");
       const hint = $("hint");
+      const countEl = $("count");
 
       let channel = null;
       let ready = false;
@@ -306,13 +308,21 @@
 
         channel = supabase
           .channel(`room:${roomId}`)
+          // Presence でこのページを開いている人数を数える
+          .on("presence", { event: "sync" }, () => {
+            const n = Object.keys(channel.presenceState()).length;
+            countEl.textContent = n > 0 ? `・👥 ${n}人参加中` : "";
+          })
           .subscribe((status) => {
             if (status === "SUBSCRIBED") {
               setStatus(`接続済み (room:${roomId})`, "ok");
+              // 自分を参加者として登録する（タブを閉じると自動で消える）
+              channel.track({ joined_at: Date.now() });
             } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
               setStatus("接続エラー", "ng");
             } else if (status === "CLOSED") {
               setStatus("切断", "ng");
+              countEl.textContent = "";
             }
           });
       }
