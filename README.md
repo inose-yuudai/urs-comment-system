@@ -32,7 +32,7 @@ Mac / Windows どちらも手順は同じで、違うのは「1. 必要なもの
 
 ```bash
 git clone https://github.com/inose-yuudai/urs.git
-cd urs-commnet-system
+cd urs-comment-system
 ```
 
 ### 3. 依存パッケージをインストール
