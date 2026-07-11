@@ -145,10 +145,15 @@
       .stamps button:hover:not(:disabled) {
         border-color: var(--accent);
       }
+      .stamps button.emoji {
+        font-size: 34px;
+        line-height: 1;
+        padding: 0;
+      }
       .stamps button img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         border-radius: 50%;
         display: block;
       }
@@ -191,8 +196,16 @@
 
       // スタンプ登録表: 通信ではコードだけを送り、画像はお互いローカルに持つ
       // （受信側 src/stamps.ts と同じコードを登録すること）
+      // 値を "emoji:🎉" のようにすると、画像ファイルなしで絵文字がそのままスタンプになる
       const STAMPS = {
         logo: "stamps/logo.png",
+        uno: "stamps/uno.png",
+        urs: "stamps/urs.png",
+        tada: "emoji:🎉",
+        clap: "emoji:👏",
+        lol: "emoji:😂",
+        heart: "emoji:❤️",
+        fire: "emoji:🔥",
       };
 
       // 定型文: 通常のテキストコメントとして送信される
@@ -351,10 +364,15 @@
         btn.type = "button";
         btn.disabled = true;
         btn.title = code;
-        const img = document.createElement("img");
-        img.src = src;
-        img.alt = code;
-        btn.appendChild(img);
+        if (src.startsWith("emoji:")) {
+          btn.classList.add("emoji");
+          btn.textContent = src.slice("emoji:".length);
+        } else {
+          const img = document.createElement("img");
+          img.src = src;
+          img.alt = code;
+          btn.appendChild(img);
+        }
         btn.addEventListener("click", () => sendStamp(code));
         stampsEl.appendChild(btn);
       }

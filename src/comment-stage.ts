@@ -46,10 +46,20 @@ export class CommentStage {
     wrap.style.top = `${top}px`;
     wrap.style.left = `${left}px`;
 
-    const el = document.createElement("img");
-    el.className = "stamp";
-    el.src = src;
-    el.alt = stamp.code;
+    // "emoji:🎉" 形式は画像ではなく絵文字をそのまま表示する
+    let el: HTMLElement;
+    if (src.startsWith("emoji:")) {
+      el = document.createElement("div");
+      el.className = "stamp stamp-emoji";
+      el.textContent = src.slice("emoji:".length);
+      el.style.fontSize = `${Math.round(size * 0.8)}px`;
+    } else {
+      const img = document.createElement("img");
+      img.className = "stamp";
+      img.src = src;
+      img.alt = stamp.code;
+      el = img;
+    }
     el.style.animationDuration = `${randInt(CFG.stampMs.min, CFG.stampMs.max)}ms`;
     // 本体のアニメーションが一番長いので、終わったら火花ごと片付ける
     el.addEventListener("animationend", () => wrap.remove());
