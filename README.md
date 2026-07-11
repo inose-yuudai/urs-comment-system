@@ -45,8 +45,7 @@ npm install
 
 ### 4. `.env` を作成
 
-プロジェクト直下(`package.json` と同じ場所)に `.env` というファイルを作り、次の3行を書きます。
-Windows でメモ帳を使う場合は、保存時に `.env.txt` にならないよう「ファイルの種類: すべてのファイル」を選んでください:
+プロジェクト直下(`package.json` と同じ場所)に `.env` というファイルを作り、次の3行を書きます:
 
 ```env
 SUPABASE_URL=https://yuhztxmuqqlefdeptecd.supabase.co
@@ -54,8 +53,33 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_QpYyfaifwzb8dH1RfcqfzQ_7iHZS-Jn
 ROOM_ID=default
 ```
 
+手で作らなくても、次のコマンドをそのままコピペして実行すれば作成できます。
+
+**Mac(ターミナル)の場合:**
+
+```bash
+cat <<'EOF' > .env
+SUPABASE_URL=https://yuhztxmuqqlefdeptecd.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_QpYyfaifwzb8dH1RfcqfzQ_7iHZS-Jn
+ROOM_ID=default
+EOF
+```
+
+**Windows(PowerShell)の場合:**
+
+```powershell
+@"
+SUPABASE_URL=https://yuhztxmuqqlefdeptecd.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_QpYyfaifwzb8dH1RfcqfzQ_7iHZS-Jn
+ROOM_ID=default
+"@ | Out-File -FilePath .env -Encoding ascii
+```
+
+> どちらも `cd` でプロジェクトのフォルダに入った状態で実行してください。`cat .env`(Mac)/ `Get-Content .env`(Windows)で3行表示されれば成功です。
+
 - 上2つは Supabase の接続情報(公開用キーなのでこのまま使えます)
 - `ROOM_ID` は送信ページの `?room=xxx` と合わせる(通常は `default` のまま)
+- メモ帳などで手動で作る場合は、`.env.txt` にならないよう「ファイルの種類: すべてのファイル」を選ぶこと
 
 ### 5. 起動
 
