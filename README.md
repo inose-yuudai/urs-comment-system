@@ -31,7 +31,7 @@ Mac / Windows どちらも手順は同じで、違うのは「1. 必要なもの
 ### 2. ソースコードを取得
 
 ```bash
-git clone https://github.com/inose-yuudai/urs.git
+git clone https://github.com/inose-yuudai/urs-comment-system.git
 cd urs-comment-system
 ```
 
