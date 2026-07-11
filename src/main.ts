@@ -48,6 +48,7 @@ function createWindow(display: Display): void {
       additionalArguments: [
         `--supabase-url=${process.env.SUPABASE_URL ?? ""}`,
         `--supabase-publishable-key=${process.env.SUPABASE_PUBLISHABLE_KEY ?? ""}`,
+        `--room-id=${process.env.ROOM_ID ?? "default"}`,
       ],
     },
   });
@@ -92,11 +93,30 @@ function updateMenus(): void {
         { label: "表示先ディスプレイ", enabled: false },
         ...displayMenuItems(),
         { type: "separator" },
+        {
+          label: win?.isVisible()
+            ? "コメントを一時非表示 (⌃⌘H)"
+            : "コメント表示を再開 (⌃⌘H)",
+          click: toggleOverlay,
+        },
+        { type: "separator" },
         { label: "終了", role: "quit" },
       ]),
     );
   }
 
+}
+
+// Ctrl+Cmd+H でコメント表示を一時的に隠す/戻す
+function toggleOverlay(): void {
+  if (!win) return;
+  if (win.isVisible()) {
+    win.hide();
+  } else {
+    // show() だとフォーカスを奪おうとするので showInactive() を使う
+    win.showInactive();
+  }
+  updateMenus();
 }
 
 // Ctrl+Cmd+Y で次のディスプレイへ順繰りに移動する
@@ -127,6 +147,7 @@ app.whenReady().then(() => {
   updateMenus();
 
   globalShortcut.register("Control+Command+Y", cycleDisplay);
+  globalShortcut.register("Control+Command+H", toggleOverlay);
 
   // モニターの抜き差しに追従してメニューを作り直す
   screen.on("display-added", updateMenus);

@@ -6,6 +6,7 @@ declare global {
     supabaseEnv: {
       url: string;
       publishableKey: string;
+      roomId: string;
     };
   }
 }

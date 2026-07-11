@@ -4,6 +4,8 @@ import { COMMENT_CONFIG as CFG } from "./comment-config.js";
 import { pick, randInt } from "./random.js";
 
 export class CommentStage {
+  private lastConfettiAt = 0;
+
   constructor(private readonly root: HTMLElement) {}
 
   spawn(comment: Comment): void {
@@ -29,6 +31,33 @@ export class CommentStage {
     el.style.animationDuration = `${randInt(CFG.flowSeconds.min, CFG.flowSeconds.max)}s`;
     el.addEventListener("animationend", () => el.remove());
     this.root.appendChild(el);
+
+    if (CFG.celebrateWords.some((w) => comment.text.includes(w))) {
+      this.spawnConfetti();
+    }
+  }
+
+  // お祝いモード: 画面上部から紙吹雪が舞い落ちる
+  private spawnConfetti(): void {
+    // 連投されても3秒に1回まで
+    const now = Date.now();
+    if (now - this.lastConfettiAt < 3000) return;
+    this.lastConfettiAt = now;
+
+    for (let i = 0; i < CFG.confettiCount; i++) {
+      const p = document.createElement("span");
+      p.className = "confetti";
+      p.style.left = `${Math.random() * 100}%`;
+      p.style.width = `${randInt(6, 11)}px`;
+      p.style.height = `${randInt(9, 16)}px`;
+      p.style.background = pick(CFG.colors);
+      p.style.setProperty("--drift", `${randInt(-120, 120)}px`);
+      p.style.setProperty("--spin", `${randInt(360, 1080)}deg`);
+      p.style.animationDuration = `${randInt(2500, 4500)}ms`;
+      p.style.animationDelay = `${randInt(0, 800)}ms`;
+      p.addEventListener("animationend", () => p.remove());
+      this.root.appendChild(p);
+    }
   }
 
   spawnStamp(stamp: Stamp): void {

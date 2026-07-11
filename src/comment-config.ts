@@ -34,4 +34,10 @@ export const COMMENT_CONFIG = {
 
   // スタンプが表示されてから消えるまでの時間(ミリ秒)の範囲
   stampMs: { min: 1800, max: 2600 },
+
+  // お祝いモード: この単語がコメントに含まれていたら画面全体に紙吹雪が舞う
+  celebrateWords: ["おめでとう", "🎉", "祝"],
+
+  // 紙吹雪の枚数
+  confettiCount: 90,
 } as const;

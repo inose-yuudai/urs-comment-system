@@ -10,4 +10,5 @@ const read = (key) => {
 contextBridge.exposeInMainWorld("supabaseEnv", {
   url: read("supabase-url"),
   publishableKey: read("supabase-publishable-key"),
+  roomId: read("room-id") || "default",
 });
