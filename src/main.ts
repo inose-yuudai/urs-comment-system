@@ -24,6 +24,12 @@ let win: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let currentDisplayId: number | null = null;
 
+const isMac = process.platform === "darwin";
+// Windows には Command キーがないので Ctrl+Alt に割り当てる
+const SHORTCUT_DISPLAY = isMac ? "Control+Command+Y" : "Control+Alt+Y";
+const SHORTCUT_TOGGLE = isMac ? "Control+Command+H" : "Control+Alt+H";
+const SHORTCUT_TOGGLE_LABEL = isMac ? "⌃⌘H" : "Ctrl+Alt+H";
+
 function createWindow(display: Display): void {
   const { x, y, width, height } = display.workArea;
   currentDisplayId = display.id;
@@ -81,11 +87,15 @@ function displayMenuItems(): MenuItemConstructorOptions[] {
 
 // 上部メニューバー（アプリメニューの並び）とトレイの両方に同じ切り替えメニューを出す
 function updateMenus(): void {
-  const appMenu = Menu.buildFromTemplate([
-    { role: "appMenu" },
-    { label: "表示先ディスプレイ", submenu: displayMenuItems() },
-  ]);
-  Menu.setApplicationMenu(appMenu);
+  // アプリメニュー（appMenu ロール）は macOS 専用
+  if (isMac) {
+    Menu.setApplicationMenu(
+      Menu.buildFromTemplate([
+        { role: "appMenu" },
+        { label: "表示先ディスプレイ", submenu: displayMenuItems() },
+      ]),
+    );
+  }
 
   if (tray) {
     tray.setContextMenu(
@@ -95,8 +105,8 @@ function updateMenus(): void {
         { type: "separator" },
         {
           label: win?.isVisible()
-            ? "コメントを一時非表示 (⌃⌘H)"
-            : "コメント表示を再開 (⌃⌘H)",
+            ? `コメントを一時非表示 (${SHORTCUT_TOGGLE_LABEL})`
+            : `コメント表示を再開 (${SHORTCUT_TOGGLE_LABEL})`,
           click: toggleOverlay,
         },
         { type: "separator" },
@@ -133,8 +143,10 @@ function createTray(): void {
   );
   // 画像が読めなかった環境でも文字だけで常駐できるようにしておく
   tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
-  tray.setTitle("URS");
+  tray.setTitle("URS"); // メニューバーに文字を出せるのは macOS のみ
   tray.setToolTip("URS - 表示先ディスプレイを切り替え");
+  // Windows は左クリックでメニューが開かないので明示的に開く
+  tray.on("click", () => tray?.popUpContextMenu());
 }
 
 app.whenReady().then(() => {
@@ -146,8 +158,8 @@ app.whenReady().then(() => {
   createTray();
   updateMenus();
 
-  globalShortcut.register("Control+Command+Y", cycleDisplay);
-  globalShortcut.register("Control+Command+H", toggleOverlay);
+  globalShortcut.register(SHORTCUT_DISPLAY, cycleDisplay);
+  globalShortcut.register(SHORTCUT_TOGGLE, toggleOverlay);
 
   // モニターの抜き差しに追従してメニューを作り直す
   screen.on("display-added", updateMenus);
